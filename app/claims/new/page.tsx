@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, CheckCircle } from "lucide-react"
 import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Combobox } from "@/components/ui/combobox"
 import { FileUpload } from "@/components/file-upload"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/hooks/use-auth"
+import { submitClaim } from "@/lib/supabase/claims"
+import type { ClaimData } from "@/lib/supabase/claims"
 
 // Sample corporate names for the combobox
 const corporateNames = [
@@ -46,6 +50,7 @@ const statusOptions = [
 ]
 
 export default function NewClaimPage() {
+  const { user } = useAuth()
   const [dateReceived, setDateReceived] = useState<Date>()
   const [corporateName, setCorporateName] = useState("")
   const [employeeName, setEmployeeName] = useState("")
@@ -56,25 +61,114 @@ export default function NewClaimPage() {
   const [status, setStatus] = useState("Received from client")
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [claimId, setClaimId] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setDateReceived(undefined)
+    setCorporateName("")
+    setEmployeeName("")
+    setEmployeeId("")
+    setClaimAmount("")
+    setClaimType("")
+    setReimbursementMethod("cheque")
+    setStatus("Received from client")
+    setFiles([])
+    setNotes("")
+    setError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const formData = {
+    if (!user) {
+      setError("You must be logged in to submit a claim")
+      return
+    }
+
+    if (!dateReceived) {
+      setError("Please select a date received")
+      return
+    }
+
+    if (!corporateName || !employeeName || !claimAmount || !claimType) {
+      setError("Please fill in all required fields")
+      return
+    }
+
+    const amount = Number.parseFloat(claimAmount)
+    if (isNaN(amount) || amount <= 0) {
+      setError("Please enter a valid claim amount")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    const claimData: ClaimData = {
       dateReceived,
       corporateName,
       employeeName,
-      employeeId,
-      claimAmount: Number.parseFloat(claimAmount),
+      employeeId: employeeId || undefined,
+      claimAmount: amount,
       claimType,
       reimbursementMethod,
       status,
+      notes: notes || undefined,
       files,
-      notes,
     }
 
-    console.log("Form submitted:", formData)
-    // Here you would typically send the data to your backend
+    try {
+      const result = await submitClaim(claimData, user)
+
+      if (result.success) {
+        setSuccess(true)
+        setClaimId(result.claimId || null)
+        resetForm()
+
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setSuccess(false)
+          setClaimId(null)
+        }, 5000)
+      } else {
+        setError(result.error || "Failed to submit claim")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+      console.error("Claim submission error:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Claim Submitted Successfully!</h3>
+                <p className="mt-2 text-sm text-gray-600">Your claim has been submitted and is now being processed.</p>
+                {claimId && <p className="mt-1 text-xs text-gray-500">Claim ID: {claimId}</p>}
+              </div>
+              <div className="flex justify-center space-x-4">
+                <Button onClick={() => setSuccess(false)} variant="outline">
+                  Submit Another Claim
+                </Button>
+                <Button onClick={() => (window.location.href = "/claims")}>View All Claims</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -85,6 +179,12 @@ export default function NewClaimPage() {
           <CardDescription>Fill out the form below to submit a new insurance claim</CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Date Received */}
@@ -98,6 +198,7 @@ export default function NewClaimPage() {
                         "w-full justify-start text-left font-normal",
                         !dateReceived && "text-muted-foreground",
                       )}
+                      disabled={loading}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateReceived ? format(dateReceived, "PPP") : "Pick a date"}
@@ -130,6 +231,7 @@ export default function NewClaimPage() {
                   onChange={(e) => setEmployeeName(e.target.value)}
                   placeholder="Enter employee name"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -141,6 +243,7 @@ export default function NewClaimPage() {
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
                   placeholder="Enter employee ID (optional)"
+                  disabled={loading}
                 />
               </div>
 
@@ -156,13 +259,14 @@ export default function NewClaimPage() {
                   onChange={(e) => setClaimAmount(e.target.value)}
                   placeholder="0.00"
                   required
+                  disabled={loading}
                 />
               </div>
 
               {/* Claim Type */}
               <div className="space-y-2">
                 <Label htmlFor="claim-type">Claim Type *</Label>
-                <Select value={claimType} onValueChange={setClaimType} required>
+                <Select value={claimType} onValueChange={setClaimType} required disabled={loading}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select claim type" />
                   </SelectTrigger>
@@ -184,6 +288,7 @@ export default function NewClaimPage() {
                 value={reimbursementMethod}
                 onValueChange={setReimbursementMethod}
                 className="flex flex-row space-x-6"
+                disabled={loading}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="cheque" id="cheque" />
@@ -199,7 +304,7 @@ export default function NewClaimPage() {
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={setStatus} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -234,13 +339,14 @@ export default function NewClaimPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add any additional notes or tags..."
                 rows={4}
+                disabled={loading}
               />
             </div>
 
             {/* Submit Button */}
             <div className="flex justify-end pt-6">
-              <Button type="submit" size="lg" className="px-8">
-                Submit Claim
+              <Button type="submit" size="lg" className="px-8" disabled={loading}>
+                {loading ? "Submitting Claim..." : "Submit Claim"}
               </Button>
             </div>
           </form>

@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { signIn } from "@/lib/auth"
+import { isSupabaseConfigured } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,6 +27,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isSupabaseConfigured()) {
+      setError("Authentication service is not configured. Please check your environment variables.")
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -66,6 +73,14 @@ export default function LoginPage() {
             <CardDescription>Enter your email and password to access your account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!isSupabaseConfigured() && (
+              <Alert>
+                <AlertDescription>
+                  Authentication is not configured. Please set up your Supabase environment variables.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -85,7 +100,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || !isSupabaseConfigured()}
                 />
               </div>
 
@@ -109,11 +124,11 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || !isSupabaseConfigured()}
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !isSupabaseConfigured()}>
                 {loading ? "Signing in..." : "Sign in"}
               </Button>
             </form>

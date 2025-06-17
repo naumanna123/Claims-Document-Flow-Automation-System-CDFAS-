@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { BarChart3, FileText, Home, Settings, Users, Plus } from "lucide-react"
+import { BarChart3, FileText, Home, Settings, Users, Plus, UserCog } from "lucide-react"
 
 import {
   Sidebar,
@@ -42,7 +42,7 @@ const navigationItems = [
   {
     title: "Users",
     url: "/users",
-    icon: Users,
+    icon: UserCog,
   },
   {
     title: "Settings",

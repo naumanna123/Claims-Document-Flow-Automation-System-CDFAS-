@@ -1,58 +1,43 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { ClaimsTable } from "@/components/claims-table"
+import { DashboardStats } from "@/components/dashboard-stats"
+import { Plus, RefreshCw } from "lucide-react"
 
 export default function DashboardPage() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Claims</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">1,234</div>
-          <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Claims</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">456</div>
-          <p className="text-xs text-muted-foreground">+12.5% from last month</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">89</div>
-          <p className="text-xs text-muted-foreground">+5.2% from last month</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">23</div>
-          <p className="text-xs text-muted-foreground">-2.1% from last month</p>
-        </CardContent>
-      </Card>
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-      <Card className="col-span-full">
-        <CardHeader>
-          <CardTitle>Welcome to ClaimsPro Dashboard</CardTitle>
-          <CardDescription>
-            Your main content area is ready to display different views based on navigation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
-            <p className="text-muted-foreground">Main content area - ready for your application views</p>
-          </div>
-        </CardContent>
-      </Card>
+  const handleRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1)
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your insurance claims</p>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={() => (window.location.href = "/claims/new")}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Claim
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <DashboardStats refreshTrigger={refreshTrigger} />
+
+      {/* Claims Table */}
+      <ClaimsTable refreshTrigger={refreshTrigger} />
     </div>
   )
 }
