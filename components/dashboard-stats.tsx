@@ -35,9 +35,11 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
   }, [user, refreshTrigger])
 
   const totalClaims = claims.length
-  const activeClaims = claims.filter((claim) => !["Cheque Delivered", "Approved by IGI"].includes(claim.status)).length
+  const activeClaims = claims.filter(
+    (claim) => !["Cheque Delivered", "Approved by IGI"].includes(claim.current_status),
+  ).length
   const totalAmount = claims.reduce((sum, claim) => sum + claim.claim_amount, 0)
-  const pendingReviews = claims.filter((claim) => claim.status === "Received from client").length
+  const pendingReviews = claims.filter((claim) => claim.current_status === "Received from client").length
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {

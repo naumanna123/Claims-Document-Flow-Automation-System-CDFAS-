@@ -30,8 +30,8 @@ const statusOptions = [
   "Cheque Delivered",
 ]
 
-const getStatusColor = (status: string) => {
-  switch (status) {
+const getStatusColor = (currentStatus: string) => {
+  switch (currentStatus) {
     case "Received from client":
       return "bg-blue-100 text-blue-800"
     case "Document scanned & uploaded":
@@ -102,7 +102,7 @@ export function ClaimsTable({ refreshTrigger = 0 }: ClaimsTableProps) {
 
     // Filter by status
     if (statusFilter !== "All Statuses") {
-      filtered = filtered.filter((claim) => claim.status === statusFilter)
+      filtered = filtered.filter((claim) => claim.current_status === statusFilter)
     }
 
     setFilteredClaims(filtered)
@@ -255,8 +255,8 @@ export function ClaimsTable({ refreshTrigger = 0 }: ClaimsTableProps) {
                     <TableCell>{claim.employee_name}</TableCell>
                     <TableCell className="font-medium">{formatCurrency(claim.claim_amount)}</TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(claim.status)} variant="secondary">
-                        {claim.status}
+                      <Badge className={getStatusColor(claim.current_status)} variant="secondary">
+                        {claim.current_status}
                       </Badge>
                     </TableCell>
                     <TableCell>{formatDate(claim.date_received)}</TableCell>

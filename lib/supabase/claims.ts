@@ -9,7 +9,7 @@ export interface ClaimData {
   claimAmount: number
   claimType: string
   reimbursementMethod: string
-  status: string
+  currentStatus: string // Changed from status to currentStatus
   notes?: string
   files: File[]
 }
@@ -25,7 +25,7 @@ export interface ClaimRecord {
   claim_amount: number
   claim_type: string
   reimbursement_method: string
-  status: string
+  current_status: string // Changed from status to current_status
   file_urls: string[]
   notes?: string
   user_id: string
@@ -89,7 +89,7 @@ export async function submitClaim(
         claim_amount: claimData.claimAmount,
         claim_type: claimData.claimType,
         reimbursement_method: claimData.reimbursementMethod,
-        status: claimData.status,
+        current_status: claimData.currentStatus, // Changed from status to current_status
         notes: claimData.notes || null,
         user_id: user.id,
         file_urls: [],

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS claims (
   claim_amount DECIMAL(10,2) NOT NULL,
   claim_type TEXT NOT NULL CHECK (claim_type IN ('Dental', 'Optical', 'General Medical', 'Maternity', 'Surgery', 'Hospitalization', 'Other')),
   reimbursement_method TEXT NOT NULL CHECK (reimbursement_method IN ('cheque', 'bank-transfer')),
-  status TEXT NOT NULL DEFAULT 'Received from client' CHECK (status IN (
+  current_status TEXT NOT NULL DEFAULT 'Received from client' CHECK (current_status IN (
     'Received from client',
     'Document scanned & uploaded',
     'Claim reviewed internally',
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS claims (
 -- Create an index on user_id for better query performance
 CREATE INDEX IF NOT EXISTS idx_claims_user_id ON claims(user_id);
 
--- Create an index on status for filtering
-CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
+-- Create an index on current_status for filtering
+CREATE INDEX IF NOT EXISTS idx_claims_current_status ON claims(current_status);
 
 -- Create an index on created_at for sorting
 CREATE INDEX IF NOT EXISTS idx_claims_created_at ON claims(created_at DESC);

@@ -58,7 +58,7 @@ export default function NewClaimPage() {
   const [claimAmount, setClaimAmount] = useState("")
   const [claimType, setClaimType] = useState("")
   const [reimbursementMethod, setReimbursementMethod] = useState("cheque")
-  const [status, setStatus] = useState("Received from client")
+  const [currentStatus, setCurrentStatus] = useState("Received from client") // Changed from status to currentStatus
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
@@ -74,7 +74,7 @@ export default function NewClaimPage() {
     setClaimAmount("")
     setClaimType("")
     setReimbursementMethod("cheque")
-    setStatus("Received from client")
+    setCurrentStatus("Received from client") // Changed from status to currentStatus
     setFiles([])
     setNotes("")
     setError(null)
@@ -115,7 +115,7 @@ export default function NewClaimPage() {
       claimAmount: amount,
       claimType,
       reimbursementMethod,
-      status,
+      currentStatus, // Changed from status to currentStatus
       notes: notes || undefined,
       files,
     }
@@ -303,8 +303,8 @@ export default function NewClaimPage() {
 
             {/* Status */}
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus} disabled={loading}>
+              <Label htmlFor="current-status">Status</Label>
+              <Select value={currentStatus} onValueChange={setCurrentStatus} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
